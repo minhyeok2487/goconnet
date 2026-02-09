@@ -62,6 +62,10 @@ export function GetSessions() {
   return window['go']['main']['App']['GetSessions']();
 }
 
+export function GetSettings() {
+  return window['go']['main']['App']['GetSettings']();
+}
+
 export function ListSerialPorts() {
   return window['go']['main']['App']['ListSerialPorts']();
 }
@@ -88,4 +92,8 @@ export function UpdateFolder(arg1) {
 
 export function UpdateSession(arg1) {
   return window['go']['main']['App']['UpdateSession'](arg1);
+}
+
+export function UpdateSettings(arg1) {
+  return window['go']['main']['App']['UpdateSettings'](arg1);
 }

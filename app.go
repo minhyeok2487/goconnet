@@ -7,13 +7,15 @@ import (
 	"goconnect/internal/connection"
 	"goconnect/internal/crypto"
 	"goconnect/internal/session"
+	"goconnect/internal/settings"
 )
 
 // App struct holds the application state and provides Wails-bound methods.
 type App struct {
-	ctx     context.Context
-	store   *session.Store
-	manager *connection.Manager
+	ctx      context.Context
+	store    *session.Store
+	manager  *connection.Manager
+	settings *settings.Store
 }
 
 // NewApp creates a new App application struct.
@@ -34,6 +36,7 @@ func (a *App) startup(ctx context.Context) {
 		return
 	}
 	a.store = store
+	a.settings = settings.NewStore()
 }
 
 // shutdown is called when the app is closing.
@@ -337,4 +340,16 @@ func (a *App) GetConnectionInfo(connID string) *connection.ConnInfo {
 // GetActiveConnections returns info about all active connections.
 func (a *App) GetActiveConnections() []*connection.ConnInfo {
 	return a.manager.GetAllInfo()
+}
+
+// --- Settings ---
+
+// GetSettings returns application settings.
+func (a *App) GetSettings() *settings.Settings {
+	return a.settings.Get()
+}
+
+// UpdateSettings saves application settings.
+func (a *App) UpdateSettings(s *settings.Settings) error {
+	return a.settings.Update(s)
 }

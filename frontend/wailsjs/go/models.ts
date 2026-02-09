@@ -168,3 +168,30 @@ export namespace session {
 
 }
 
+export namespace settings {
+	
+	export class Settings {
+	    theme: string;
+	    fontSize: number;
+	    fontFamily: string;
+	    cursorStyle: string;
+	    scrollbackLines: number;
+	    cursorBlink: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new Settings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.theme = source["theme"];
+	        this.fontSize = source["fontSize"];
+	        this.fontFamily = source["fontFamily"];
+	        this.cursorStyle = source["cursorStyle"];
+	        this.scrollbackLines = source["scrollbackLines"];
+	        this.cursorBlink = source["cursorBlink"];
+	    }
+	}
+
+}
+

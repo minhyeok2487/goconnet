@@ -5,6 +5,8 @@ import TerminalPane from './components/Terminal/TerminalPane';
 import SessionEditDialog from './components/Dialogs/SessionEditDialog';
 import StatusBar from './components/StatusBar';
 import MultiExec from './components/Terminal/MultiExec';
+import SettingsDialog from './components/Dialogs/SettingsDialog';
+import { useSettingsStore } from './stores/settingsStore';
 import { useConnectionStore } from './stores/connectionStore';
 import type { Session } from './types';
 
@@ -21,6 +23,11 @@ function App() {
   const [splitMode, setSplitMode] = useState<SplitMode>('single');
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [showMultiExec, setShowMultiExec] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const loadSettings = useSettingsStore((s) => s.loadSettings);
+
+  // Load settings on mount
+  useEffect(() => { loadSettings(); }, []);
 
   const handleEditSession = useCallback((session?: Session) => {
     setEditingSession(session);
@@ -76,6 +83,8 @@ function App() {
       if (e.ctrlKey && e.shiftKey && e.key === 'B') { e.preventDefault(); setSidebarVisible((v) => !v); }
       // Multi-execution toggle
       if (e.ctrlKey && e.shiftKey && e.key === 'M') { e.preventDefault(); setShowMultiExec((v) => !v); }
+      // Settings dialog
+      if (e.ctrlKey && e.key === ',') { e.preventDefault(); setShowSettings(true); }
       // Fullscreen
       if (e.key === 'F11') {
         e.preventDefault();
@@ -234,6 +243,9 @@ function App() {
           onClose={handleCloseDialog}
         />
       )}
+
+      {/* Settings dialog */}
+      {showSettings && <SettingsDialog onClose={() => setShowSettings(false)} />}
     </div>
   );
 }

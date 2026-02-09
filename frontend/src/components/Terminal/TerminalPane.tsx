@@ -6,6 +6,7 @@ import { SearchAddon } from '@xterm/addon-search';
 import '@xterm/xterm/css/xterm.css';
 import { EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime';
 import { useConnectionStore } from '../../stores/connectionStore';
+import { useSettingsStore, THEMES } from '../../stores/settingsStore';
 
 interface TerminalPaneProps {
   connId: string;
@@ -22,6 +23,7 @@ export default function TerminalPane({ connId, isActive, visible }: TerminalPane
   const sendInput = useConnectionStore((s) => s.sendInput);
   const resizeTerminal = useConnectionStore((s) => s.resizeTerminal);
   const removeTab = useConnectionStore((s) => s.removeTab);
+  const appSettings = useSettingsStore((s) => s.settings);
 
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,17 +33,27 @@ export default function TerminalPane({ connId, isActive, visible }: TerminalPane
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const themeColors = THEMES[appSettings.theme] || THEMES.dark;
     const term = new Terminal({
-      cursorBlink: true,
-      fontSize: 14,
-      fontFamily: "'Cascadia Code', 'Consolas', 'Courier New', monospace",
+      cursorBlink: appSettings.cursorBlink,
+      cursorStyle: appSettings.cursorStyle as 'block' | 'underline' | 'bar',
+      fontSize: appSettings.fontSize,
+      fontFamily: appSettings.fontFamily,
       theme: {
-        background: '#1e1e1e',
-        foreground: '#cccccc',
-        cursor: '#ffffff',
-        selectionBackground: '#264f78',
+        background: themeColors.background,
+        foreground: themeColors.foreground,
+        cursor: themeColors.cursor,
+        selectionBackground: themeColors.selectionBackground,
+        black: themeColors.black,
+        red: themeColors.red,
+        green: themeColors.green,
+        yellow: themeColors.yellow,
+        blue: themeColors.blue,
+        magenta: themeColors.magenta,
+        cyan: themeColors.cyan,
+        white: themeColors.white,
       },
-      scrollback: 10000,
+      scrollback: appSettings.scrollbackLines,
       allowProposedApi: true,
     });
 
