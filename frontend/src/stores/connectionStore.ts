@@ -23,6 +23,8 @@ interface ConnectionState {
   sendInput: (connId: string, data: string) => Promise<void>;
   resizeTerminal: (connId: string, cols: number, rows: number) => Promise<void>;
   setStatusText: (text: string) => void;
+  duplicateTab: (connId: string) => Promise<void>;
+  renameTab: (connId: string, label: string) => void;
 }
 
 export const useConnectionStore = create<ConnectionState>((set, get) => ({
@@ -152,4 +154,27 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   },
 
   setStatusText: (text) => set({ statusText: text }),
+
+  duplicateTab: async (connId) => {
+    const state = get();
+    const tab = state.tabs.find((t) => t.id === connId);
+    if (!tab || !tab.sessionId) return;
+    try {
+      if (tab.protocol === 'ssh') {
+        await state.connectSSH(tab.sessionId, tab.label.replace('SSH: ', ''), 80, 24);
+      } else if (tab.protocol === 'telnet') {
+        await state.connectTelnet(tab.sessionId, tab.label.replace('Telnet: ', ''), 80, 24);
+      } else if (tab.protocol === 'serial') {
+        await state.connectSerial(tab.sessionId, tab.label.replace('Serial: ', ''));
+      }
+    } catch (e) {
+      console.error('Failed to duplicate tab:', e);
+    }
+  },
+
+  renameTab: (connId, label) => {
+    set((state) => ({
+      tabs: state.tabs.map((t) => t.id === connId ? { ...t, label } : t),
+    }));
+  },
 }));
