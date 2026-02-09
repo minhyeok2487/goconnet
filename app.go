@@ -19,6 +19,7 @@ type App struct {
 	ctx      context.Context
 	store    *session.Store
 	manager  *connection.Manager
+	tunnels  *connection.TunnelManager
 	settings *settings.Store
 	macros   *macro.Store
 }
@@ -27,6 +28,7 @@ type App struct {
 func NewApp() *App {
 	return &App{
 		manager: connection.NewManager(),
+		tunnels: connection.NewTunnelManager(),
 	}
 }
 
@@ -48,6 +50,7 @@ func (a *App) startup(ctx context.Context) {
 // shutdown is called when the app is closing.
 func (a *App) shutdown(ctx context.Context) {
 	a.manager.CloseAll()
+	a.tunnels.CloseAllTunnels()
 }
 
 // --- Session CRUD ---
@@ -440,4 +443,21 @@ func (a *App) UpdateMacro(m macro.Macro) error {
 // DeleteMacro removes a macro by ID.
 func (a *App) DeleteMacro(id string) error {
 	return a.macros.Delete(id)
+}
+
+// --- SSH Tunnels ---
+
+// CreateTunnel creates a new SSH tunnel (local port forwarding).
+func (a *App) CreateTunnel(params connection.TunnelParams) (*connection.TunnelInfo, error) {
+	return a.tunnels.CreateLocalTunnel(params)
+}
+
+// CloseTunnel closes a tunnel by ID.
+func (a *App) CloseTunnel(id string) error {
+	return a.tunnels.CloseTunnel(id)
+}
+
+// GetTunnels returns all active tunnels.
+func (a *App) GetTunnels() []connection.TunnelInfo {
+	return a.tunnels.GetAllTunnels()
 }

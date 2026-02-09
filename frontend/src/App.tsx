@@ -8,6 +8,7 @@ import MultiExec from './components/Terminal/MultiExec';
 import SettingsDialog from './components/Dialogs/SettingsDialog';
 import QuickConnectDialog from './components/Dialogs/QuickConnectDialog';
 import MacroDialog from './components/Dialogs/MacroDialog';
+import TunnelDialog from './components/Dialogs/TunnelDialog';
 import { useSettingsStore } from './stores/settingsStore';
 import { useConnectionStore } from './stores/connectionStore';
 import type { Session } from './types';
@@ -28,6 +29,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showQuickConnect, setShowQuickConnect] = useState(false);
   const [showMacros, setShowMacros] = useState(false);
+  const [showTunnels, setShowTunnels] = useState(false);
   const loadSettings = useSettingsStore((s) => s.loadSettings);
 
   // Load settings on mount
@@ -93,6 +95,8 @@ function App() {
       if (e.ctrlKey && e.shiftKey && e.key === 'Q') { e.preventDefault(); setShowQuickConnect(true); }
       // Macros
       if (e.ctrlKey && e.shiftKey && e.key === 'R') { e.preventDefault(); setShowMacros(true); }
+      // Tunnels
+      if (e.ctrlKey && e.shiftKey && e.key === 'T') { e.preventDefault(); setShowTunnels(true); }
       // Fullscreen
       if (e.key === 'F11') {
         e.preventDefault();
@@ -260,6 +264,9 @@ function App() {
 
       {/* Macro dialog */}
       {showMacros && <MacroDialog onClose={() => setShowMacros(false)} />}
+
+      {/* Tunnel dialog */}
+      {showTunnels && <TunnelDialog onClose={() => setShowTunnels(false)} />}
     </div>
   );
 }
