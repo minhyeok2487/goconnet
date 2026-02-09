@@ -9,6 +9,7 @@ import SettingsDialog from './components/Dialogs/SettingsDialog';
 import QuickConnectDialog from './components/Dialogs/QuickConnectDialog';
 import MacroDialog from './components/Dialogs/MacroDialog';
 import TunnelDialog from './components/Dialogs/TunnelDialog';
+import ShortcutsDialog from './components/Dialogs/ShortcutsDialog';
 import { useSettingsStore } from './stores/settingsStore';
 import { useConnectionStore } from './stores/connectionStore';
 import type { Session } from './types';
@@ -20,6 +21,7 @@ function App() {
   const activeTabId = useConnectionStore((s) => s.activeTabId);
   const closeTab = useConnectionStore((s) => s.closeTab);
   const setActiveTab = useConnectionStore((s) => s.setActiveTab);
+  const duplicateTab = useConnectionStore((s) => s.duplicateTab);
 
   const [editingSession, setEditingSession] = useState<Session | undefined>();
   const [showDialog, setShowDialog] = useState(false);
@@ -30,6 +32,7 @@ function App() {
   const [showQuickConnect, setShowQuickConnect] = useState(false);
   const [showMacros, setShowMacros] = useState(false);
   const [showTunnels, setShowTunnels] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const loadSettings = useSettingsStore((s) => s.loadSettings);
 
   // Load settings on mount
@@ -97,6 +100,19 @@ function App() {
       if (e.ctrlKey && e.shiftKey && e.key === 'R') { e.preventDefault(); setShowMacros(true); }
       // Tunnels
       if (e.ctrlKey && e.shiftKey && e.key === 'T') { e.preventDefault(); setShowTunnels(true); }
+      // Duplicate tab
+      if (e.ctrlKey && e.shiftKey && e.key === 'U') { e.preventDefault(); if (activeTabId) duplicateTab(activeTabId); }
+      // Previous tab
+      if (e.ctrlKey && e.shiftKey && e.key === 'Tab') {
+        e.preventDefault();
+        if (tabs.length > 1 && activeTabId) {
+          const idx = tabs.findIndex((t) => t.id === activeTabId);
+          const prev = tabs[(idx - 1 + tabs.length) % tabs.length];
+          setActiveTab(prev.id);
+        }
+      }
+      // Shortcuts help
+      if (e.key === 'F1') { e.preventDefault(); setShowShortcuts(true); }
       // Fullscreen
       if (e.key === 'F11') {
         e.preventDefault();
@@ -109,7 +125,7 @@ function App() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [activeTabId, tabs, closeTab, setActiveTab, handleEditSession]);
+  }, [activeTabId, tabs, closeTab, setActiveTab, handleEditSession, duplicateTab]);
 
   const splitTabs = getSplitTabs();
 
@@ -267,6 +283,9 @@ function App() {
 
       {/* Tunnel dialog */}
       {showTunnels && <TunnelDialog onClose={() => setShowTunnels(false)} />}
+
+      {/* Shortcuts dialog */}
+      {showShortcuts && <ShortcutsDialog onClose={() => setShowShortcuts(false)} />}
     </div>
   );
 }
