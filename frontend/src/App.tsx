@@ -6,6 +6,7 @@ import SessionEditDialog from './components/Dialogs/SessionEditDialog';
 import StatusBar from './components/StatusBar';
 import MultiExec from './components/Terminal/MultiExec';
 import SettingsDialog from './components/Dialogs/SettingsDialog';
+import QuickConnectDialog from './components/Dialogs/QuickConnectDialog';
 import { useSettingsStore } from './stores/settingsStore';
 import { useConnectionStore } from './stores/connectionStore';
 import type { Session } from './types';
@@ -24,6 +25,7 @@ function App() {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [showMultiExec, setShowMultiExec] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showQuickConnect, setShowQuickConnect] = useState(false);
   const loadSettings = useSettingsStore((s) => s.loadSettings);
 
   // Load settings on mount
@@ -85,6 +87,8 @@ function App() {
       if (e.ctrlKey && e.shiftKey && e.key === 'M') { e.preventDefault(); setShowMultiExec((v) => !v); }
       // Settings dialog
       if (e.ctrlKey && e.key === ',') { e.preventDefault(); setShowSettings(true); }
+      // Quick Connect
+      if (e.ctrlKey && e.shiftKey && e.key === 'Q') { e.preventDefault(); setShowQuickConnect(true); }
       // Fullscreen
       if (e.key === 'F11') {
         e.preventDefault();
@@ -246,6 +250,9 @@ function App() {
 
       {/* Settings dialog */}
       {showSettings && <SettingsDialog onClose={() => setShowSettings(false)} />}
+
+      {/* Quick Connect dialog */}
+      {showQuickConnect && <QuickConnectDialog onClose={() => setShowQuickConnect(false)} />}
     </div>
   );
 }
