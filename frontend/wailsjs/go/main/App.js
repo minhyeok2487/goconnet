@@ -82,6 +82,10 @@ export function SavePassword(arg1, arg2) {
   return window['go']['main']['App']['SavePassword'](arg1, arg2);
 }
 
+export function SaveTerminalOutput(arg1) {
+  return window['go']['main']['App']['SaveTerminalOutput'](arg1);
+}
+
 export function SendInput(arg1, arg2) {
   return window['go']['main']['App']['SendInput'](arg1, arg2);
 }

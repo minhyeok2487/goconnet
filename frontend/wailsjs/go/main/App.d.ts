@@ -44,6 +44,8 @@ export function ResizeTerminal(arg1:string,arg2:number,arg3:number):Promise<void
 
 export function SavePassword(arg1:string,arg2:string):Promise<void>;
 
+export function SaveTerminalOutput(arg1:string):Promise<string>;
+
 export function SendInput(arg1:string,arg2:string):Promise<void>;
 
 export function UpdateFolder(arg1:session.Folder):Promise<void>;

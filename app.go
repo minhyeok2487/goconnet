@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+
+	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"goconnect/internal/connection"
 	"goconnect/internal/crypto"
@@ -352,4 +355,29 @@ func (a *App) GetSettings() *settings.Settings {
 // UpdateSettings saves application settings.
 func (a *App) UpdateSettings(s *settings.Settings) error {
 	return a.settings.Update(s)
+}
+
+// --- File Operations ---
+
+// SaveTerminalOutput opens a file save dialog and writes terminal content to the selected file.
+func (a *App) SaveTerminalOutput(content string) (string, error) {
+	filePath, err := wailsRuntime.SaveFileDialog(a.ctx, wailsRuntime.SaveDialogOptions{
+		Title: "Save Terminal Output",
+		DefaultFilename: "terminal.log",
+		Filters: []wailsRuntime.FileFilter{
+			{DisplayName: "Log Files (*.log)", Pattern: "*.log"},
+			{DisplayName: "Text Files (*.txt)", Pattern: "*.txt"},
+			{DisplayName: "All Files (*.*)", Pattern: "*.*"},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	if filePath == "" {
+		return "", nil // User cancelled
+	}
+	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+		return "", fmt.Errorf("failed to save file: %w", err)
+	}
+	return filePath, nil
 }

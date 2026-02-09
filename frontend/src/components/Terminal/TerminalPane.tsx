@@ -131,6 +131,27 @@ export default function TerminalPane({ connId, isActive, visible }: TerminalPane
     if (!isActive) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Save terminal output (Ctrl+Shift+S)
+      if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        if (termRef.current) {
+          const buffer = termRef.current.buffer.active;
+          let content = '';
+          for (let i = 0; i < buffer.length; i++) {
+            const line = buffer.getLine(i);
+            if (line) content += line.translateToString(true) + '\n';
+          }
+          (window as any)['go']['main']['App']['SaveTerminalOutput'](content)
+            .then((path: string) => {
+              if (path && termRef.current) {
+                termRef.current.write(`\r\n\x1b[32mSaved to: ${path}\x1b[0m\r\n`);
+              }
+            })
+            .catch(() => {});
+        }
+        return;
+      }
+      // Find in terminal (Ctrl+Shift+F)
       if (e.ctrlKey && e.shiftKey && e.key === 'F') {
         e.preventDefault();
         setShowSearch((prev) => {
