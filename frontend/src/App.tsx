@@ -10,6 +10,7 @@ import QuickConnectDialog from './components/Dialogs/QuickConnectDialog';
 import MacroDialog from './components/Dialogs/MacroDialog';
 import TunnelDialog from './components/Dialogs/TunnelDialog';
 import ShortcutsDialog from './components/Dialogs/ShortcutsDialog';
+import SFTPPanel from './components/SFTP/SFTPPanel';
 import { useSettingsStore } from './stores/settingsStore';
 import { useConnectionStore } from './stores/connectionStore';
 import type { Session } from './types';
@@ -33,6 +34,7 @@ function App() {
   const [showMacros, setShowMacros] = useState(false);
   const [showTunnels, setShowTunnels] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [sftpSessionId, setSftpSessionId] = useState<string | null>(null);
   const loadSettings = useSettingsStore((s) => s.loadSettings);
 
   // Load settings on mount
@@ -102,6 +104,14 @@ function App() {
       if (e.ctrlKey && e.shiftKey && e.key === 'T') { e.preventDefault(); setShowTunnels(true); }
       // Duplicate tab
       if (e.ctrlKey && e.shiftKey && e.key === 'U') { e.preventDefault(); if (activeTabId) duplicateTab(activeTabId); }
+      // SFTP Browser
+      if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+        e.preventDefault();
+        const activeTab = tabs.find((t) => t.id === activeTabId);
+        if (activeTab?.sessionId && activeTab.protocol === 'ssh') {
+          setSftpSessionId(activeTab.sessionId);
+        }
+      }
       // Previous tab
       if (e.ctrlKey && e.shiftKey && e.key === 'Tab') {
         e.preventDefault();
@@ -286,6 +296,9 @@ function App() {
 
       {/* Shortcuts dialog */}
       {showShortcuts && <ShortcutsDialog onClose={() => setShowShortcuts(false)} />}
+
+      {/* SFTP Panel */}
+      {sftpSessionId && <SFTPPanel sessionId={sftpSessionId} onClose={() => setSftpSessionId(null)} />}
     </div>
   );
 }

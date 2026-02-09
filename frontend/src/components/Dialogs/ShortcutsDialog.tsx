@@ -29,6 +29,7 @@ const shortcuts = [
     { keys: 'Ctrl+Shift+M', desc: 'Multi-Execution panel' },
     { keys: 'Ctrl+Shift+R', desc: 'Macro manager' },
     { keys: 'Ctrl+Shift+T', desc: 'SSH Tunnel manager' },
+    { keys: 'Ctrl+Shift+P', desc: 'SFTP File Browser (SSH only)' },
   ]},
 ];
 

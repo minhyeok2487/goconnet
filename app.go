@@ -20,6 +20,7 @@ type App struct {
 	store    *session.Store
 	manager  *connection.Manager
 	tunnels  *connection.TunnelManager
+	sftp     *connection.SFTPManager
 	settings *settings.Store
 	macros   *macro.Store
 }
@@ -29,6 +30,7 @@ func NewApp() *App {
 	return &App{
 		manager: connection.NewManager(),
 		tunnels: connection.NewTunnelManager(),
+		sftp:    connection.NewSFTPManager(),
 	}
 }
 
@@ -51,6 +53,7 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) shutdown(ctx context.Context) {
 	a.manager.CloseAll()
 	a.tunnels.CloseAllTunnels()
+	a.sftp.CloseAll()
 }
 
 // --- Session CRUD ---
@@ -460,4 +463,87 @@ func (a *App) CloseTunnel(id string) error {
 // GetTunnels returns all active tunnels.
 func (a *App) GetTunnels() []connection.TunnelInfo {
 	return a.tunnels.GetAllTunnels()
+}
+
+// --- SFTP ---
+
+// OpenSFTP opens an SFTP session for a given session ID.
+func (a *App) OpenSFTP(sessionID string) error {
+	sess := a.store.GetSession(sessionID)
+	if sess == nil {
+		return fmt.Errorf("session not found: %s", sessionID)
+	}
+	password, _ := crypto.GetPassword(sessionID)
+	keyFile := ""
+	if sess.AuthMethod == "keyfile" {
+		keyFile = sess.KeyFilePath
+	}
+	return a.sftp.OpenSFTP(sessionID, sess.Host, sess.Port, sess.Username, password, keyFile)
+}
+
+// CloseSFTP closes an SFTP session.
+func (a *App) CloseSFTP(sessionID string) {
+	a.sftp.CloseSFTP(sessionID)
+}
+
+// SFTPListDir lists files in a directory.
+func (a *App) SFTPListDir(sessionID, path string) ([]connection.SFTPFileInfo, error) {
+	return a.sftp.ListDir(sessionID, path)
+}
+
+// SFTPGetHome returns the home directory path.
+func (a *App) SFTPGetHome(sessionID string) (string, error) {
+	return a.sftp.GetHomePath(sessionID)
+}
+
+// SFTPDownload downloads a remote file to a local path chosen by the user.
+func (a *App) SFTPDownload(sessionID, remotePath, fileName string) (string, error) {
+	localPath, err := wailsRuntime.SaveFileDialog(a.ctx, wailsRuntime.SaveDialogOptions{
+		Title:           "Download File",
+		DefaultFilename: fileName,
+	})
+	if err != nil {
+		return "", err
+	}
+	if localPath == "" {
+		return "", nil
+	}
+	return localPath, a.sftp.Download(sessionID, remotePath, localPath)
+}
+
+// SFTPUpload uploads a local file chosen by the user to a remote directory.
+func (a *App) SFTPUpload(sessionID, remoteDir string) (string, error) {
+	localPath, err := wailsRuntime.OpenFileDialog(a.ctx, wailsRuntime.OpenDialogOptions{
+		Title: "Upload File",
+	})
+	if err != nil {
+		return "", err
+	}
+	if localPath == "" {
+		return "", nil
+	}
+	baseName := localPath
+	for i := len(localPath) - 1; i >= 0; i-- {
+		if localPath[i] == '/' || localPath[i] == '\\' {
+			baseName = localPath[i+1:]
+			break
+		}
+	}
+	remotePath := remoteDir + "/" + baseName
+	return baseName, a.sftp.Upload(sessionID, localPath, remotePath)
+}
+
+// SFTPDelete deletes a remote file or directory.
+func (a *App) SFTPDelete(sessionID, remotePath string) error {
+	return a.sftp.Delete(sessionID, remotePath)
+}
+
+// SFTPRename renames a remote file/directory.
+func (a *App) SFTPRename(sessionID, oldPath, newPath string) error {
+	return a.sftp.Rename(sessionID, oldPath, newPath)
+}
+
+// SFTPMkDir creates a remote directory.
+func (a *App) SFTPMkDir(sessionID, path string) error {
+	return a.sftp.MkDir(sessionID, path)
 }
