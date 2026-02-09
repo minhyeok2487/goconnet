@@ -3,6 +3,10 @@ import { useSessionStore } from '../../stores/sessionStore';
 import { useConnectionStore } from '../../stores/connectionStore';
 import type { Session, Folder } from '../../types';
 
+const wailsCall = (method: string, ...args: any[]) => {
+  return (window as any)['go']['main']['App'][method](...args);
+};
+
 interface SidebarProps {
   onEditSession: (session?: Session) => void;
 }
@@ -193,6 +197,44 @@ export default function Sidebar({ onEditSession }: SidebarProps) {
             {searchQuery ? 'No matching sessions.' : 'No sessions yet. Click + to create one.'}
           </div>
         )}
+      </div>
+
+      {/* Import/Export */}
+      <div className="p-2 border-t border-border-color flex gap-1">
+        <button
+          className="flex-1 text-xs text-text-secondary hover:text-white hover:bg-hover-bg px-2 py-1 rounded border border-border-color"
+          onClick={async () => {
+            try {
+              const count = await wailsCall('ImportSessions');
+              if (count > 0) {
+                loadSessions();
+                loadFolders();
+                alert(`Imported ${count} session(s).`);
+              }
+            } catch (e: any) {
+              alert(`Import failed: ${e.message || e}`);
+            }
+          }}
+          title="Import sessions from JSON file"
+        >
+          Import
+        </button>
+        <button
+          className="flex-1 text-xs text-text-secondary hover:text-white hover:bg-hover-bg px-2 py-1 rounded border border-border-color"
+          onClick={async () => {
+            try {
+              const path = await wailsCall('ExportSessions');
+              if (path) {
+                alert(`Exported to: ${path}`);
+              }
+            } catch (e: any) {
+              alert(`Export failed: ${e.message || e}`);
+            }
+          }}
+          title="Export sessions to JSON file"
+        >
+          Export
+        </button>
       </div>
 
       {/* Context Menu */}

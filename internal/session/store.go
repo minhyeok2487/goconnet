@@ -2,6 +2,7 @@ package session
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -157,4 +158,70 @@ func (s *Store) DeleteFolder(id string) error {
 		}
 	}
 	return nil
+}
+
+// ExportToFile writes all sessions and folders to a JSON file.
+func (s *Store) ExportToFile(filePath string) error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	data, err := json.MarshalIndent(s.data, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filePath, data, 0644)
+}
+
+// ImportFromFile reads sessions and folders from a JSON file and merges them.
+// Returns the number of sessions imported.
+func (s *Store) ImportFromFile(filePath string) (int, error) {
+	raw, err := os.ReadFile(filePath)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read import file: %w", err)
+	}
+	var imported StoreData
+	if err := json.Unmarshal(raw, &imported); err != nil {
+		return 0, fmt.Errorf("invalid JSON format: %w", err)
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	count := 0
+	// Import folders (skip duplicates by name)
+	existingFolders := make(map[string]bool)
+	for _, f := range s.data.Folders {
+		existingFolders[f.Name] = true
+	}
+	folderIDMap := make(map[string]string) // old ID -> new ID
+	for _, f := range imported.Folders {
+		if existingFolders[f.Name] {
+			// Find existing folder ID for mapping
+			for _, ef := range s.data.Folders {
+				if ef.Name == f.Name {
+					folderIDMap[f.ID] = ef.ID
+					break
+				}
+			}
+			continue
+		}
+		oldID := f.ID
+		f.ID = uuid.New().String()
+		folderIDMap[oldID] = f.ID
+		s.data.Folders = append(s.data.Folders, f)
+	}
+
+	// Import sessions (always create new with new IDs)
+	for _, sess := range imported.Sessions {
+		sess.ID = uuid.New().String()
+		if newFolderID, ok := folderIDMap[sess.FolderID]; ok {
+			sess.FolderID = newFolderID
+		}
+		s.data.Sessions = append(s.data.Sessions, sess)
+		count++
+	}
+
+	if err := s.save(); err != nil {
+		return 0, err
+	}
+	return count, nil
 }

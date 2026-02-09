@@ -359,6 +359,41 @@ func (a *App) UpdateSettings(s *settings.Settings) error {
 
 // --- File Operations ---
 
+// ExportSessions exports all sessions to a JSON file.
+func (a *App) ExportSessions() (string, error) {
+	filePath, err := wailsRuntime.SaveFileDialog(a.ctx, wailsRuntime.SaveDialogOptions{
+		Title:           "Export Sessions",
+		DefaultFilename: "goconnect-sessions.json",
+		Filters: []wailsRuntime.FileFilter{
+			{DisplayName: "JSON Files (*.json)", Pattern: "*.json"},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	if filePath == "" {
+		return "", nil
+	}
+	return filePath, a.store.ExportToFile(filePath)
+}
+
+// ImportSessions imports sessions from a JSON file.
+func (a *App) ImportSessions() (int, error) {
+	filePath, err := wailsRuntime.OpenFileDialog(a.ctx, wailsRuntime.OpenDialogOptions{
+		Title: "Import Sessions",
+		Filters: []wailsRuntime.FileFilter{
+			{DisplayName: "JSON Files (*.json)", Pattern: "*.json"},
+		},
+	})
+	if err != nil {
+		return 0, err
+	}
+	if filePath == "" {
+		return 0, nil
+	}
+	return a.store.ImportFromFile(filePath)
+}
+
 // SaveTerminalOutput opens a file save dialog and writes terminal content to the selected file.
 func (a *App) SaveTerminalOutput(content string) (string, error) {
 	filePath, err := wailsRuntime.SaveFileDialog(a.ctx, wailsRuntime.SaveDialogOptions{
