@@ -4,6 +4,7 @@ import TerminalTabs from './components/Terminal/TerminalTabs';
 import TerminalPane from './components/Terminal/TerminalPane';
 import SessionEditDialog from './components/Dialogs/SessionEditDialog';
 import StatusBar from './components/StatusBar';
+import MultiExec from './components/Terminal/MultiExec';
 import { useConnectionStore } from './stores/connectionStore';
 import type { Session } from './types';
 
@@ -19,6 +20,7 @@ function App() {
   const [showDialog, setShowDialog] = useState(false);
   const [splitMode, setSplitMode] = useState<SplitMode>('single');
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [showMultiExec, setShowMultiExec] = useState(false);
 
   const handleEditSession = useCallback((session?: Session) => {
     setEditingSession(session);
@@ -72,6 +74,8 @@ function App() {
       if (e.ctrlKey && e.shiftKey && e.key === '$') { e.preventDefault(); setSplitMode('quad'); }
       // Sidebar toggle
       if (e.ctrlKey && e.shiftKey && e.key === 'B') { e.preventDefault(); setSidebarVisible((v) => !v); }
+      // Multi-execution toggle
+      if (e.ctrlKey && e.shiftKey && e.key === 'M') { e.preventDefault(); setShowMultiExec((v) => !v); }
       // Fullscreen
       if (e.key === 'F11') {
         e.preventDefault();
@@ -216,6 +220,9 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Multi-execution panel */}
+      <MultiExec visible={showMultiExec} onClose={() => setShowMultiExec(false)} />
 
       {/* Status bar */}
       <StatusBar />
