@@ -17,6 +17,7 @@ interface ConnectionState {
   connectRDP: (sessionId: string) => Promise<void>;
   quickConnectSSH: (host: string, port: number, username: string, password: string, cols: number, rows: number) => Promise<string>;
   disconnect: (connId: string) => void;
+  markDisconnected: (connId: string) => void;
   setActiveTab: (connId: string) => void;
   closeTab: (connId: string) => void;
   removeTab: (connId: string) => void;
@@ -25,6 +26,7 @@ interface ConnectionState {
   setStatusText: (text: string) => void;
   duplicateTab: (connId: string) => Promise<void>;
   renameTab: (connId: string, label: string) => void;
+  reconnectTab: (connId: string) => Promise<string | null>;
 }
 
 export const useConnectionStore = create<ConnectionState>((set, get) => ({
@@ -40,6 +42,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       label: `SSH: ${name}`,
       protocol: 'ssh',
       isConnected: true,
+      connectedAt: Date.now(),
     };
     set((state) => ({
       tabs: [...state.tabs, tab],
@@ -57,6 +60,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       label: `Telnet: ${name}`,
       protocol: 'telnet',
       isConnected: true,
+      connectedAt: Date.now(),
     };
     set((state) => ({
       tabs: [...state.tabs, tab],
@@ -74,6 +78,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       label: `Serial: ${name}`,
       protocol: 'serial',
       isConnected: true,
+      connectedAt: Date.now(),
     };
     set((state) => ({
       tabs: [...state.tabs, tab],
@@ -95,6 +100,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
       label: `SSH: ${username}@${host}`,
       protocol: 'ssh',
       isConnected: true,
+      connectedAt: Date.now(),
     };
     set((state) => ({
       tabs: [...state.tabs, tab],
@@ -108,9 +114,17 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     wailsCall('Disconnect', connId);
     set((state) => ({
       tabs: state.tabs.map((t) =>
-        t.id === connId ? { ...t, isConnected: false, label: t.label + ' (closed)' } : t
+        t.id === connId ? { ...t, isConnected: false, label: t.label.replace(' (closed)', '') + ' (closed)' } : t
       ),
       statusText: 'Disconnected',
+    }));
+  },
+
+  markDisconnected: (connId) => {
+    set((state) => ({
+      tabs: state.tabs.map((t) =>
+        t.id === connId ? { ...t, isConnected: false } : t
+      ),
     }));
   },
 
@@ -176,5 +190,43 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     set((state) => ({
       tabs: state.tabs.map((t) => t.id === connId ? { ...t, label } : t),
     }));
+  },
+
+  reconnectTab: async (connId) => {
+    const state = get();
+    const tab = state.tabs.find((t) => t.id === connId);
+    if (!tab || !tab.sessionId) return null;
+
+    try {
+      let newConnId: string | null = null;
+      const baseName = tab.label
+        .replace(' (closed)', '')
+        .replace(/^SSH: |^Telnet: |^Serial: /, '');
+
+      if (tab.protocol === 'ssh') {
+        newConnId = await wailsCall('ConnectSSH', tab.sessionId, 80, 24);
+      } else if (tab.protocol === 'telnet') {
+        newConnId = await wailsCall('ConnectTelnet', tab.sessionId, 80, 24);
+      } else if (tab.protocol === 'serial') {
+        newConnId = await wailsCall('ConnectSerial', tab.sessionId);
+      }
+
+      if (newConnId) {
+        // Replace old tab with new connection
+        set((state) => ({
+          tabs: state.tabs.map((t) =>
+            t.id === connId
+              ? { ...t, id: newConnId!, isConnected: true, connectedAt: Date.now(), label: tab.label.replace(' (closed)', '') }
+              : t
+          ),
+          activeTabId: state.activeTabId === connId ? newConnId : state.activeTabId,
+          statusText: `Reconnected: ${baseName}`,
+        }));
+      }
+      return newConnId;
+    } catch (e) {
+      console.error('Reconnect failed:', e);
+      return null;
+    }
   },
 }));

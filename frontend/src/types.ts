@@ -66,4 +66,5 @@ export interface Tab {
   label: string;
   protocol: string;
   isConnected: boolean;
+  connectedAt?: number; // timestamp for uptime tracking
 }

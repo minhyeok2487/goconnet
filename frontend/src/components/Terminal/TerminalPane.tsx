@@ -23,11 +23,21 @@ export default function TerminalPane({ connId, isActive, visible }: TerminalPane
   const sendInput = useConnectionStore((s) => s.sendInput);
   const resizeTerminal = useConnectionStore((s) => s.resizeTerminal);
   const removeTab = useConnectionStore((s) => s.removeTab);
+  const markDisconnected = useConnectionStore((s) => s.markDisconnected);
+  const reconnectTab = useConnectionStore((s) => s.reconnectTab);
+  const tabs = useConnectionStore((s) => s.tabs);
   const appSettings = useSettingsStore((s) => s.settings);
 
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [disconnected, setDisconnected] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connIdRef = useRef(connId);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keep connId ref in sync
+  useEffect(() => { connIdRef.current = connId; }, [connId]);
 
   // Initialize terminal
   useEffect(() => {
@@ -108,12 +118,15 @@ export default function TerminalPane({ connId, isActive, visible }: TerminalPane
     };
 
     const closedHandler = (eventConnId: string, errMsg: string) => {
-      if (eventConnId === connId && termRef.current) {
+      if (eventConnId === connIdRef.current && termRef.current) {
         if (errMsg) {
           termRef.current.write(`\r\n\x1b[31mError: ${errMsg}\x1b[0m\r\n`);
         } else {
           termRef.current.write('\r\n\x1b[33mConnection closed.\x1b[0m\r\n');
         }
+        termRef.current.write('\x1b[36mPress Enter to reconnect or close the tab.\x1b[0m\r\n');
+        setDisconnected(true);
+        markDisconnected(connIdRef.current);
       }
     };
 
@@ -334,6 +347,58 @@ export default function TerminalPane({ connId, isActive, visible }: TerminalPane
             }}
           >
             &#10005;
+          </button>
+        </div>
+      )}
+
+      {/* Reconnect overlay */}
+      {disconnected && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 8,
+            right: 20,
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            background: '#252526',
+            border: '1px solid #3c3c3c',
+            borderRadius: 4,
+            padding: '6px 12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          }}
+        >
+          <span style={{ color: '#ccc', fontSize: 12 }}>
+            {reconnecting ? 'Reconnecting...' : 'Connection lost'}
+          </span>
+          <button
+            onClick={async () => {
+              setReconnecting(true);
+              const newId = await reconnectTab(connIdRef.current);
+              if (newId) {
+                setDisconnected(false);
+                setReconnecting(false);
+              } else {
+                setReconnecting(false);
+                if (termRef.current) {
+                  termRef.current.write('\r\n\x1b[31mReconnect failed.\x1b[0m\r\n');
+                }
+              }
+            }}
+            disabled={reconnecting}
+            style={{
+              background: '#094771',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 3,
+              padding: '4px 12px',
+              cursor: reconnecting ? 'wait' : 'pointer',
+              fontSize: 12,
+              opacity: reconnecting ? 0.6 : 1,
+            }}
+          >
+            Reconnect
           </button>
         </div>
       )}
