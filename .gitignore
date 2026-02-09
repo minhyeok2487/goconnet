@@ -1,0 +1,30 @@
+# Build output
+build/bin/
+frontend/dist/
+
+# Dependencies
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Debug
+cmd/serialcheck/
+
+# Credentials (never commit)
+*.pem
+*.key
