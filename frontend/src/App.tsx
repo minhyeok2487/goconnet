@@ -7,6 +7,7 @@ import StatusBar from './components/StatusBar';
 import MultiExec from './components/Terminal/MultiExec';
 import SettingsDialog from './components/Dialogs/SettingsDialog';
 import QuickConnectDialog from './components/Dialogs/QuickConnectDialog';
+import MacroDialog from './components/Dialogs/MacroDialog';
 import { useSettingsStore } from './stores/settingsStore';
 import { useConnectionStore } from './stores/connectionStore';
 import type { Session } from './types';
@@ -26,6 +27,7 @@ function App() {
   const [showMultiExec, setShowMultiExec] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showQuickConnect, setShowQuickConnect] = useState(false);
+  const [showMacros, setShowMacros] = useState(false);
   const loadSettings = useSettingsStore((s) => s.loadSettings);
 
   // Load settings on mount
@@ -89,6 +91,8 @@ function App() {
       if (e.ctrlKey && e.key === ',') { e.preventDefault(); setShowSettings(true); }
       // Quick Connect
       if (e.ctrlKey && e.shiftKey && e.key === 'Q') { e.preventDefault(); setShowQuickConnect(true); }
+      // Macros
+      if (e.ctrlKey && e.shiftKey && e.key === 'R') { e.preventDefault(); setShowMacros(true); }
       // Fullscreen
       if (e.key === 'F11') {
         e.preventDefault();
@@ -253,6 +257,9 @@ function App() {
 
       {/* Quick Connect dialog */}
       {showQuickConnect && <QuickConnectDialog onClose={() => setShowQuickConnect(false)} />}
+
+      {/* Macro dialog */}
+      {showMacros && <MacroDialog onClose={() => setShowMacros(false)} />}
     </div>
   );
 }

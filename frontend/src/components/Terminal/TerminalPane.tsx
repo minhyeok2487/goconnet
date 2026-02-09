@@ -7,6 +7,7 @@ import '@xterm/xterm/css/xterm.css';
 import { EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime';
 import { useConnectionStore } from '../../stores/connectionStore';
 import { useSettingsStore, THEMES } from '../../stores/settingsStore';
+import { useMacroStore } from '../../stores/macroStore';
 
 interface TerminalPaneProps {
   connId: string;
@@ -27,6 +28,8 @@ export default function TerminalPane({ connId, isActive, visible }: TerminalPane
   const reconnectTab = useConnectionStore((s) => s.reconnectTab);
   const tabs = useConnectionStore((s) => s.tabs);
   const appSettings = useSettingsStore((s) => s.settings);
+  const macroRecording = useMacroStore((s) => s.recording);
+  const macroRecordStep = useMacroStore((s) => s.recordStep);
 
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,6 +93,10 @@ export default function TerminalPane({ connId, isActive, visible }: TerminalPane
     // Handle user input -> send raw string to Go (no base64)
     term.onData((data) => {
       sendInput(connId, data);
+      // Record step if macro recording is active
+      if (useMacroStore.getState().recording) {
+        useMacroStore.getState().recordStep(data);
+      }
     });
 
     // Handle binary data (for special keys)

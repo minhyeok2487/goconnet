@@ -9,6 +9,7 @@ import (
 
 	"goconnect/internal/connection"
 	"goconnect/internal/crypto"
+	"goconnect/internal/macro"
 	"goconnect/internal/session"
 	"goconnect/internal/settings"
 )
@@ -19,6 +20,7 @@ type App struct {
 	store    *session.Store
 	manager  *connection.Manager
 	settings *settings.Store
+	macros   *macro.Store
 }
 
 // NewApp creates a new App application struct.
@@ -40,6 +42,7 @@ func (a *App) startup(ctx context.Context) {
 	}
 	a.store = store
 	a.settings = settings.NewStore()
+	a.macros = macro.NewStore()
 }
 
 // shutdown is called when the app is closing.
@@ -415,4 +418,26 @@ func (a *App) SaveTerminalOutput(content string) (string, error) {
 		return "", fmt.Errorf("failed to save file: %w", err)
 	}
 	return filePath, nil
+}
+
+// --- Macros ---
+
+// GetMacros returns all saved macros.
+func (a *App) GetMacros() []macro.Macro {
+	return a.macros.GetAll()
+}
+
+// CreateMacro saves a new macro.
+func (a *App) CreateMacro(m macro.Macro) (macro.Macro, error) {
+	return a.macros.Create(m)
+}
+
+// UpdateMacro updates an existing macro.
+func (a *App) UpdateMacro(m macro.Macro) error {
+	return a.macros.Update(m)
+}
+
+// DeleteMacro removes a macro by ID.
+func (a *App) DeleteMacro(id string) error {
+	return a.macros.Delete(id)
 }
