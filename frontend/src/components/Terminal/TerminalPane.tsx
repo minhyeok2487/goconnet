@@ -10,9 +10,11 @@ import { useConnectionStore } from '../../stores/connectionStore';
 interface TerminalPaneProps {
   connId: string;
   isActive: boolean;
+  visible?: boolean; // For split mode: show even if not active
 }
 
-export default function TerminalPane({ connId, isActive }: TerminalPaneProps) {
+export default function TerminalPane({ connId, isActive, visible }: TerminalPaneProps) {
+  const isVisible = visible !== undefined ? visible : isActive;
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
@@ -143,9 +145,9 @@ export default function TerminalPane({ connId, isActive }: TerminalPaneProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isActive, showSearch]);
 
-  // Fit terminal when tab becomes active or window resizes
+  // Fit terminal when visible or window resizes
   useEffect(() => {
-    if (!isActive || !fitRef.current || !termRef.current) return;
+    if (!isVisible || !fitRef.current || !termRef.current) return;
 
     const doFit = () => {
       if (fitRef.current && termRef.current && containerRef.current) {
@@ -172,7 +174,7 @@ export default function TerminalPane({ connId, isActive }: TerminalPaneProps) {
       clearTimeout(timer);
       resizeObserver.disconnect();
     };
-  }, [isActive, connId]);
+  }, [isVisible, connId]);
 
   // Focus terminal when active
   useEffect(() => {
@@ -205,7 +207,7 @@ export default function TerminalPane({ connId, isActive }: TerminalPaneProps) {
   return (
     <div
       style={{
-        display: isActive ? 'block' : 'none',
+        display: isVisible ? 'block' : 'none',
         position: 'absolute',
         top: 0,
         left: 0,
