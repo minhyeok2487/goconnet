@@ -3,12 +3,14 @@ package connection
 import (
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
 
 // SSHConnection wraps an SSH session with PTY support.
@@ -126,6 +128,21 @@ func buildAuthMethods(params SSHConnectParams) ([]ssh.AuthMethod, error) {
 	var methods []ssh.AuthMethod
 
 	switch params.AuthMethod {
+	case "agent":
+		// Try Windows OpenSSH agent (named pipe)
+		agentConn, err := net.Dial("unix", `\\.\pipe\openssh-ssh-agent`)
+		if err != nil {
+			// Fallback: try SSH_AUTH_SOCK
+			sock := os.Getenv("SSH_AUTH_SOCK")
+			if sock != "" {
+				agentConn, err = net.Dial("unix", sock)
+			}
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect to SSH agent: %w", err)
+		}
+		agentClient := agent.NewClient(agentConn)
+		methods = append(methods, ssh.PublicKeysCallback(agentClient.Signers))
 	case "keyfile":
 		keyData, err := os.ReadFile(params.KeyFilePath)
 		if err != nil {
