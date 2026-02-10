@@ -218,7 +218,17 @@ function App() {
     <div className="flex flex-col h-full w-full">
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        {sidebarVisible && <Sidebar onEditSession={handleEditSession} />}
+        {sidebarVisible && (
+          <Sidebar
+            onEditSession={handleEditSession}
+            onOpenSettings={() => setShowSettings(true)}
+            onOpenQuickConnect={() => setShowQuickConnect(true)}
+            onOpenMacros={() => setShowMacros(true)}
+            onOpenTunnels={() => setShowTunnels(true)}
+            onOpenShortcuts={() => setShowShortcuts(true)}
+            onToggleMultiExec={() => setShowMultiExec((v) => !v)}
+          />
+        )}
 
         {/* Main content */}
         <div className="flex-1 flex flex-col overflow-hidden">

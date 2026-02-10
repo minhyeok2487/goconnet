@@ -9,9 +9,15 @@ const wailsCall = (method: string, ...args: any[]) => {
 
 interface SidebarProps {
   onEditSession: (session?: Session) => void;
+  onOpenSettings?: () => void;
+  onOpenQuickConnect?: () => void;
+  onOpenMacros?: () => void;
+  onOpenTunnels?: () => void;
+  onOpenShortcuts?: () => void;
+  onToggleMultiExec?: () => void;
 }
 
-export default function Sidebar({ onEditSession }: SidebarProps) {
+export default function Sidebar({ onEditSession, onOpenSettings, onOpenQuickConnect, onOpenMacros, onOpenTunnels, onOpenShortcuts, onToggleMultiExec }: SidebarProps) {
   const sessions = useSessionStore((s) => s.sessions);
   const folders = useSessionStore((s) => s.folders);
   const searchQuery = useSessionStore((s) => s.searchQuery);
@@ -199,7 +205,45 @@ export default function Sidebar({ onEditSession }: SidebarProps) {
         )}
       </div>
 
-      {/* Import/Export */}
+      {/* Feature Toolbar */}
+      <div className="px-2 pt-2 border-t border-border-color">
+        <div className="grid grid-cols-4 gap-1">
+          <button
+            onClick={onOpenQuickConnect}
+            className="flex flex-col items-center justify-center py-1 text-text-secondary hover:text-white hover:bg-hover-bg rounded text-[10px] leading-tight"
+            title="Quick Connect (Ctrl+Shift+Q)"
+          >
+            <span style={{ fontSize: 14 }}>⚡</span>
+            <span>Quick</span>
+          </button>
+          <button
+            onClick={onOpenMacros}
+            className="flex flex-col items-center justify-center py-1 text-text-secondary hover:text-white hover:bg-hover-bg rounded text-[10px] leading-tight"
+            title="Macro Manager (Ctrl+Shift+R)"
+          >
+            <span style={{ fontSize: 14 }}>⏺</span>
+            <span>Macro</span>
+          </button>
+          <button
+            onClick={onOpenTunnels}
+            className="flex flex-col items-center justify-center py-1 text-text-secondary hover:text-white hover:bg-hover-bg rounded text-[10px] leading-tight"
+            title="SSH Tunnels (Ctrl+Shift+T)"
+          >
+            <span style={{ fontSize: 14 }}>🔀</span>
+            <span>Tunnel</span>
+          </button>
+          <button
+            onClick={onToggleMultiExec}
+            className="flex flex-col items-center justify-center py-1 text-text-secondary hover:text-white hover:bg-hover-bg rounded text-[10px] leading-tight"
+            title="Multi-Execution (Ctrl+Shift+M)"
+          >
+            <span style={{ fontSize: 14 }}>📤</span>
+            <span>Multi</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Import/Export + Settings */}
       <div className="p-2 border-t border-border-color flex gap-1">
         <button
           className="flex-1 text-xs text-text-secondary hover:text-white hover:bg-hover-bg px-2 py-1 rounded border border-border-color"
@@ -234,6 +278,13 @@ export default function Sidebar({ onEditSession }: SidebarProps) {
           title="Export sessions to JSON file"
         >
           Export
+        </button>
+        <button
+          className="text-xs text-text-secondary hover:text-white hover:bg-hover-bg px-2 py-1 rounded border border-border-color"
+          onClick={onOpenSettings}
+          title="Settings (Ctrl+,)"
+        >
+          ⚙
         </button>
       </div>
 
